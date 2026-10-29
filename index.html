@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QR на листе наклеек</title>
+<style>
+:root{--bg:#f5f5f3;--card:#fff;--ink:#1c1c1a;--mut:#6b6b66;--line:#d9d9d4;--fld:#f5f5f3;--acc:#2f5bd8;--acct:#fff;--prev:#e8e8e5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171a;--card:#212125;--ink:#ececea;--mut:#9a9a95;--line:#3a3a40;--fld:#2a2a2f;--prev:#2d2d32;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17171a;--card:#212125;--ink:#ececea;--mut:#9a9a95;--line:#3a3a40;--fld:#2a2a2f;--prev:#2d2d32;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px}
+.wrap{max-width:560px;margin:0 auto;display:grid;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px}
+h1{font-size:20px;margin:0 0 12px}
+.drop{border:2px dashed var(--line);border-radius:18px;padding:24px 12px;text-align:center;color:var(--mut);cursor:pointer}
+.drop{position:relative;display:block}.drop input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0}.drop.over{border-color:var(--acc)}
+button,select,input[type=number]{font:inherit;color:var(--ink);background:var(--fld);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+button.p{background:var(--acc);color:var(--acct);border-color:var(--acc)}
+button:disabled{opacity:.5}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
+.row input{width:110px}
+select{width:100%;margin-top:12px}
+.btns{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+details{margin-top:12px;color:var(--mut)}
+details .g{display:grid;grid-template-columns:1fr 90px;gap:6px 12px;margin-top:8px;align-items:center}
+.list{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.list span{font-size:13px;background:var(--fld);border:1px solid var(--line);border-radius:8px;padding:3px 8px}
+#prev{width:100%;height:auto;display:block;border-radius:10px;background:var(--prev)}
+.note{color:var(--mut);font-size:14px;margin:10px 0 0}
+.warn{color:#c0392b}
+#pa{display:none}
+.act{display:grid;grid-template-columns:auto 104px;column-gap:10px;row-gap:10px;justify-content:start;margin-top:16px}
+.act #pdf{grid-column:1;grid-row:1}.act #png{grid-column:1;grid-row:2}
+.act .sq{grid-column:2;grid-row:1/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:19px;font-weight:600;padding:6px}
+.sq i{font-style:normal;font-size:30px;line-height:1}
+@page{size:A4;margin:0}
+@media print{:root,body{padding:0!important;background:#fff!important}.wrap{display:none!important}#pa{display:block}#pa img{width:210mm;height:297mm;display:block}}
+</style></head>
+<body><div class="wrap">
+<div class="card">
+<h1>QR на листе наклеек</h1>
+<label class="drop" id="drop">Выберите PDF (или PNG/JPG) либо перетащите файлы на компьютере.<br>Каждая страница PDF → отдельная наклейка.
+<input id="file" type="file" accept=".pdf,application/pdf,image/*" multiple></label>
+<div class="list" id="list"></div>
+<div class="btns"><button id="clear">Очистить</button></div>
+<select id="preset">
+<option value="70,42.4,3,7,0,0,0,0">70 × 42,4 мм (Avery L7163-ы), 21 шт.</option>
+<option value="63.5,38.1,3,7,7.2,15.15,2.5,0">63,5 × 38,1 мм (Avery L7160 и аналоги), 21 шт.</option>
+<option value="custom">Свои размеры…</option>
+</select>
+<div class="row"><span>Начать с наклейки №</span><input id="start" type="number" min="1" value="1"></div>
+<div class="row"><span>Отступ QR от края, мм</span><input id="pad" type="number" min="0" step="0.5" value="5"></div>
+<div class="row"><span>Обрезать белые поля</span><input id="trim" type="checkbox" checked></div>
+<details id="dim"><summary>Размеры листа и наклеек</summary>
+<div class="g">
+<span>Ширина наклейки, мм</span><input id="w" type="number" step="0.1">
+<span>Высота наклейки, мм</span><input id="h" type="number" step="0.1">
+<span>Колонок</span><input id="cols" type="number">
+<span>Рядов</span><input id="rows" type="number">
+<span>Левое поле, мм</span><input id="ml" type="number" step="0.01">
+<span>Верхнее поле, мм</span><input id="mt" type="number" step="0.01">
+<span>Зазор по горизонтали, мм</span><input id="gx" type="number" step="0.01">
+<span>Зазор по вертикали, мм</span><input id="gy" type="number" step="0.01">
+</div></details>
+<div class="act"><button class="p" id="pdf" disabled>Сохранить PDF</button><button id="png" disabled>Сохранить PNG</button><button class="p sq" id="prt" disabled><i>🖨️</i>Печать</button></div>
+<p class="note warn" id="msg"></p>
+</div>
+<div class="card"><canvas id="prev"></canvas>
+<p class="note">Предпросмотр листа A4. Печатайте в масштабе 100% (без «подогнать по размеру»).</p></div>
+</div>
+<div id="pa"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const items=[]; // {canvas,label}
+const F=['w','h','cols','rows','ml','mt','gx','gy'];
+function applyPreset(){const v=$('preset').value;if(v==='custom'){$('dim').open=true;return}
+  v.split(',').forEach((x,i)=>$(F[i]).value=x);$('dim').open=false;draw()}
+const P=()=>{const o={};F.forEach(k=>o[k]=parseFloat($(k).value)||0);o.pad=parseFloat($('pad').value)||0;o.start=Math.max(1,parseInt($('start').value)||1);return o};
+
+function trimCanvas(c){
+  const ctx=c.getContext('2d'),W=c.width,H=c.height,d=ctx.getImageData(0,0,W,H).data;
+  let x0=W,y0=H,x1=-1,y1=-1;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4;
+    if(d[i+3]>10&&(d[i]<235||d[i+1]<235||d[i+2]<235)){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}}
+  if(x1<0)return c;
+  const m=Math.round(Math.max(W,H)*0.01);x0=Math.max(0,x0-m);y0=Math.max(0,y0-m);x1=Math.min(W-1,x1+m);y1=Math.min(H-1,y1+m);
+  const o=document.createElement('canvas');o.width=x1-x0+1;o.height=y1-y0+1;
+  const oc=o.getContext('2d');oc.fillStyle='#fff';oc.fillRect(0,0,o.width,o.height);oc.drawImage(c,x0,y0,o.width,o.height,0,0,o.width,o.height);return o}
+
+async function addFiles(files){
+  $('msg').textContent='Обработка…';
+  try{
+    for(const f of files){
+      if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)){
+        const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+        for(let n=1;n<=pdf.numPages;n++){
+          const pg=await pdf.getPage(n),vp=pg.getViewport({scale:3}),c=document.createElement('canvas');
+          c.width=vp.width;c.height=vp.height;const cx=c.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,c.width,c.height);
+          await pg.render({canvasContext:cx,viewport:vp}).promise;
+          items.push({raw:c,label:f.name.replace(/\.pdf$/i,'')+(pdf.numPages>1?' · стр.'+n:'')});
+        }
+      }else if(f.type.startsWith('image/')){
+        const bmp=await createImageBitmap(f),c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;
+        const cx=c.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,c.width,c.height);cx.drawImage(bmp,0,0);
+        items.push({raw:c,label:f.name});
+      }
+    }
+    $('msg').textContent='';
+  }catch(e){$('msg').textContent='Не удалось прочитать файл: '+(e.message||e)}
+  refresh();
+}
+function refresh(){
+  const L=$('list');L.innerHTML='';
+  items.forEach((it,i)=>{const s=document.createElement('span');s.textContent=(i+1)+'. '+it.label;L.appendChild(s)});
+  $('pdf').disabled=$('png').disabled=$('prt').disabled=!items.length;draw()}
+const cur=it=>$('trim').checked?(it.tr||(it.tr=trimCanvas(it.raw))):it.raw;
+
+// draw sheet on ctx at k px/mm
+function draw(){
+  const p=P(),k=4,cv=$('prev');cv.width=210*k;cv.height=297*k;paint(cv.getContext('2d'),k,true);
+  const cap=p.cols*p.rows,free=cap-(p.start-1);
+  $('msg').textContent=items.length>free?`Не помещается: на листе осталось ${Math.max(free,0)} мест, лишние (${items.length-Math.max(free,0)}) не попадут. Сохраните лист и начните новый.`:'';
+}
+function cells(){const p=P(),out=[];
+  for(let r=0;r<p.rows;r++)for(let c=0;c<p.cols;c++)out.push({x:p.ml+c*(p.w+p.gx),y:p.mt+r*(p.h+p.gy)});return out}
+function fit(it,cell,p){const c=cur(it),aw=p.w-2*p.pad,ah=p.h-2*p.pad;
+  if(aw<=0||ah<=0)return null;const s=Math.min(aw/c.width,ah/c.height),w=c.width*s,h=c.height*s;
+  return{c,x:cell.x+(p.w-w)/2,y:cell.y+(p.h-h)/2,w,h}}
+function paint(ctx,k,guides){
+  const p=P(),cs=cells();ctx.fillStyle='#fff';ctx.fillRect(0,0,210*k,297*k);
+  cs.forEach((c,i)=>{
+    if(guides){ctx.strokeStyle='#555';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.strokeRect(c.x*k,c.y*k,p.w*k,p.h*k);ctx.setLineDash([]);
+      ctx.fillStyle='#444';ctx.font=(2.6*k)+'px sans-serif';ctx.fillText(i+1,(c.x+1)*k,(c.y+3.5)*k)}
+    const it=items[i-(p.start-1)];if(!it||i<p.start-1)return;
+    const f=fit(it,c,p);if(f)ctx.drawImage(f.c,f.x*k,f.y*k,f.w*k,f.h*k)});
+}
+async function save(name,data){
+  try{const d=(typeof claude!=='undefined'&&claude.use)?await claude.use('downloads'):null;if(!d){const u=URL.createObjectURL(data instanceof Blob?data:new Blob([data])),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();return}
+    await d.save({filename:name,data})}
+  catch(e){if(e&&e.code!=='declined')$('msg').textContent='Ошибка сохранения: '+(e.message||e)}}
+$('png').onclick=()=>{const k=300/25.4,c=document.createElement('canvas');c.width=Math.round(210*k);c.height=Math.round(297*k);
+  paint(c.getContext('2d'),k,false);c.toBlob(b=>save('qr-sheet.png',b),'image/png')};
+function buildPdf(){
+  const p=P(),doc=new jspdf.jsPDF({unit:'mm',format:'a4'}),cs=cells();
+  items.forEach((it,j)=>{const i=j+p.start-1;if(i>=cs.length)return;const f=fit(it,cs[i],p);if(!f)return;
+    const c=f.c,t=document.createElement('canvas');const sc=Math.min(1,1400/Math.max(c.width,c.height));
+    t.width=Math.round(c.width*sc);t.height=Math.round(c.height*sc);t.getContext('2d').drawImage(c,0,0,t.width,t.height);
+    doc.addImage(t.toDataURL('image/png'),'PNG',f.x,f.y,f.w,f.h)});
+  return doc.output('blob')}
+$('pdf').onclick=()=>save('qr-sheet.pdf',buildPdf());
+function doPrint(){const k=300/25.4,c=document.createElement('canvas');c.width=Math.round(210*k);c.height=Math.round(297*k);
+  paint(c.getContext('2d'),k,false);const pa=$('pa');pa.innerHTML='';const im=new Image();im.onload=()=>window.print();im.src=c.toDataURL('image/png');pa.appendChild(im)}
+$('prt').onclick=async()=>{
+  try{const file=new File([buildPdf()],'qr-sheet.pdf',{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'QR-наклейки'});return}
+  }catch(e){if(e&&e.name==='AbortError')return}
+  doPrint()};
+$('clear').onclick=()=>{items.length=0;refresh()};
+$('file').onchange=e=>{addFiles([...e.target.files]);e.target.value=''};
+const dz=$('drop');
+['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('over')}));
+dz.addEventListener('drop',e=>addFiles([...e.dataTransfer.files]));
+$('preset').onchange=applyPreset;
+[...F,'pad','start'].forEach(k=>$(k).oninput=draw);
+$('trim').onchange=draw;
+applyPreset();
+try{pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'}catch(e){$('msg').textContent='Не загрузилась библиотека PDF. Обновите страницу.'}
+</script></body></html>
